@@ -4,7 +4,7 @@ export const Strings = {
   loginTitle: 'Login to Your Account',
   loginSubtitle: 'Enter your mobile number to continue',
   countryCode: '+91',
-  mobilePlaceholder: 'Mobile Number',
+  mobilePlaceholder: '9999999999',
   sendOtpButton: 'Send OTP',
   sendingOtp: 'Sending...',
   createAccountPrefix: "Don't have an account? ",

@@ -115,7 +115,7 @@ const styles = StyleSheet.create({
   input: {
     flex: 1,
     color: Colors.textPrimary,
-    fontSize: FontSize.md,
+    fontSize: FontSize['lg'],
     fontWeight: '500',
     padding: 0,
     height: '100%',

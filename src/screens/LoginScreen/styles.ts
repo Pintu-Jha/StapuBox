@@ -49,11 +49,13 @@ export const styles = StyleSheet.create({
   },
   footerText: {
     ...Typography.caption,
-    color: Colors.textSecondary,
+    color: Colors.textPrimary,
+    fontSize: 12,
   },
   footerLink: {
     ...Typography.captionMedium,
     color: Colors.accent,
+    fontSize: 12,
   },
 
 

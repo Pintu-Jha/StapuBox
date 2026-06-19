@@ -1,28 +1,5 @@
 # StapuBox OTP Authentication
 
-A production-ready OTP authentication flow built with React Native CLI and TypeScript.
-
-![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey)
-![React Native](https://img.shields.io/badge/React%20Native-0.86-blue)
-![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)
-![License](https://img.shields.io/badge/license-MIT-green)
-
----
-
-## Features
-
-- 📱 Mobile number entry with country code picker (+91)
-- 🔢 4-digit OTP input with auto-focus, backspace navigation & paste support
-- 📩 SMS Auto-Read via `react-native-sms-retriever` (Android only)
-- ⏱️ 60-second resend countdown timer with reset
-- ✅ Success screen with spring animation
-- 🛡️ Zod + React Hook Form validation
-- 🌐 Offline detection via `@react-native-community/netinfo`
-- 🎨 Pixel-perfect dark theme (Figma: `#2D2E2F` + `#2398FE`)
-- ⚡ Shake animation on invalid OTP
-- ♿ Full accessibility support (roles, labels, states)
-
----
 
 ## Tech Stack
 
@@ -34,7 +11,8 @@ A production-ready OTP authentication flow built with React Native CLI and TypeS
 | State | Zustand |
 | API | Axios |
 | Validation | React Hook Form + Zod |
-| SMS Auto-Read | react-native-sms-retriever |
+| Animations | React Native Reanimated v3 |
+| Keyboard | react-native-keyboard-controller |
 | Offline | @react-native-community/netinfo |
 
 ---
@@ -46,13 +24,17 @@ src/
 ├── api/              # Axios instance + raw API calls
 ├── services/         # Business logic + error mapping
 ├── store/            # Zustand global state
-├── hooks/            # Custom hooks (useSendOtp, useOtpTimer, etc.)
+├── hooks/            # Custom hooks (useSendOtp, useOtpTimer, useSmsRetriever, etc.)
 ├── screens/          # LoginScreen, VerifyOtpScreen, SuccessScreen
-├── components/       # Reusable UI (AppButton, OTPInput, etc.)
-├── navigation/       # AuthNavigator + typed routes
+├── components/       # Reusable UI (AppButton, OTPInput, NetworkBanner, etc.)
+├── navigation/       # AppNavigator + typed routes
 ├── constants/        # Colors, typography, spacing, strings
 ├── utils/            # Validators, SMS parser
 └── types/            # TypeScript type definitions
+
+android/
+└── app/src/main/java/com/stapubox/
+    └── SmsRetrieverModule.kt   # Custom Native Module for SMS User Consent
 ```
 
 ---
@@ -75,6 +57,8 @@ npm install
 ```
 
 ### 2. Configure Environment
+
+Create a `.env` file in the root directory:
 
 ```bash
 cp .env.example .env
@@ -129,63 +113,22 @@ All requests include `Authorization: Bearer {API_TOKEN}` header.
 
 ---
 
-## Architecture Decisions
+## Architecture & Design Decisions
 
-### Feature-Based Folder Structure
-Each feature owns its screen, styles, and component files. Scales cleanly as the app grows.
+### 1. Custom Native SMS Module (User Consent API)
+Instead of relying on outdated third-party packages, we implemented a custom Android Native Module (`SmsRetrieverModule.kt`). It uses Google's **SMS User Consent API** which does NOT require the server to append a complicated 11-character app hash to the SMS, making it far more robust.
 
-### Service Layer Pattern
-API calls go through `auth.service.ts` which maps errors to user-friendly messages. Screens never contain API logic.
+### 2. Edge-to-Edge Keyboard Handling
+We use `react-native-keyboard-controller` for seamless, native 120Hz keyboard animations. We configured the App root to use `statusBarTranslucent={true}` to prevent Android window background clashes, while manually painting the Status Bar within our `ScreenContainer`.
 
-### Minimal Global State (Zustand)
-Only the mobile number is stored globally (needed across Login → VerifyOtp → Success). Loading and error states remain local to each screen.
+### 3. Offline Resilience
+Integrated `@react-native-community/netinfo` to globally listen for network drops. The `NetworkBanner` component mounts at the root level and gracefully slides in if the user loses connectivity during the flow.
 
-### Separation of Concerns
-- `api/` — HTTP only
-- `services/` — Business logic + error mapping
-- `hooks/` — UI state management
-- `screens/` — Composition only
+### 4. Service Layer Pattern
+API calls go through `auth.service.ts` which maps errors to user-friendly messages. Screens never contain raw API logic, keeping them strictly focused on UI composition.
 
-### SMS Retriever Abstraction
-`useSmsRetriever` hook abstracts the Android SMS Retriever API. Gracefully degrades on iOS (no-op). Users can always enter OTP manually.
-
-### React.memo + useCallback
-All reusable components are wrapped in `React.memo`. Handlers use `useCallback` to prevent unnecessary re-renders.
-
----
-
-## Running Tests
-
-```bash
-npm test
-
-# With coverage
-npm test -- --coverage
-```
-
-### Test Coverage
-
-| File | Tests |
-|---|---|
-| `validators.ts` | Mobile validation, OTP validation, numeric filter, Zod schema |
-| `smsParser.ts` | OTP extraction from various SMS formats |
-| `useOtpTimer.ts` | Countdown, finish callback, reset |
-
----
-
-## Generating Release APK
-
-```bash
-cd android
-./gradlew assembleRelease
-```
-
-APK will be at:
-```
-android/app/build/outputs/apk/release/app-release.apk
-```
-
-> For a signed release, configure a keystore in `android/app/build.gradle`.
+### 5. Minimal Global State (Zustand)
+Only the mobile number and authentication status are stored globally (needed across Login → VerifyOtp → Success). Loading and error states remain purely local to each screen.
 
 ---
 
@@ -194,47 +137,44 @@ android/app/build/outputs/apk/release/app-release.apk
 ```
 User taps Send OTP
         ↓
-OTP Screen opens + SMS Retriever starts
+OTP Screen mounts → starts useSmsRetriever hook
+        ↓
+Native Module calls startSmsUserConsent()
         ↓
 Server sends OTP via SMS
         ↓
-react-native-sms-retriever receives message
+Android OS intercepts the SMS (if it contains OTP-like text)
         ↓
-extractOtpFromSms() parses 4-digit code
+Bottom sheet prompts User: "Allow StapuBox to read this message?"
         ↓
-OTP boxes auto-filled + auto-submitted
+User taps "Allow"
+        ↓
+extractOtpFromSms() parses 4-digit code using Regex
+        ↓
+OTP boxes auto-filled + auto-submitted to server
 ```
-
-> The SMS must contain the app's hash (generated from package name + signing key). This is handled automatically by the SMS Retriever API.
 
 ---
 
-## Known Issues
+## Known Issues & Limitations
 
-1. **SMS Retriever hash**: The SMS must include the app's 11-character hash string (appended by server). If the server doesn't include this hash, auto-read won't work — the user falls back to manual entry cleanly.
-
-2. **react-native-sms-retriever on RN 0.86**: Tested via dynamic import. If the native module fails to link, the hook falls back silently.
-
-3. **iOS**: SMS auto-read is Android-only. iOS users enter OTP manually — fully supported.
-
-4. **API response shape**: The service layer handles both `{ success, data }` and raw response shapes. If the API changes shape, update `auth.service.ts` only.
+1. **iOS SMS Auto-Fill**: The custom SMS module is Android-only. On iOS, users can rely on Apple's built-in keyboard OTP suggestion feature (which works automatically if the SMS contains "code" or "OTP").
+2. **Reanimated vs ScrollView on Android**: There is a known issue where `react-native-reanimated` entrance animations (`FadeInUp`) can get stuck at `opacity: 0` inside ScrollViews on physical Android devices. We removed layout animations on `LoginScreen` to guarantee 100% visibility.
+3. **API Response Shape**: The service layer handles both `{ success, data }` and raw response shapes. If the backend significantly changes its JSON schema, update `auth.service.ts` to map it properly.
 
 ---
 
 ## Demo Flow
 
 1. Launch app → Login screen
-2. Enter 10-digit mobile number
-3. Tap "Send OTP" → loading state → navigate to OTP screen
-4. OTP auto-filled via SMS (Android) or enter manually
-5. 4th digit entered → auto-submit → loading
-6. Wrong OTP → red boxes + shake animation + error message
-7. "Resend OTP" disabled for 60s, then enabled
-8. Correct OTP → Success screen with animation
-9. "Change Mobile Number" → navigate back to Login
+2. Disconnect internet → Red Offline Banner slides in
+3. Reconnect internet → Banner slides out
+4. Enter 10-digit mobile number
+5. Tap "Send OTP" → loading state → navigate to OTP screen
+6. OTP received → Android bottom sheet asks for permission → User accepts → Auto-filled
+7. 4th digit entered → auto-submit → loading
+8. Wrong OTP → red boxes + shake animation + error message
+9. "Resend OTP" disabled for 60s, then enabled
+10. Correct OTP → Success screen with animation
 
 ---
-
-## License
-
-MIT

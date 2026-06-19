@@ -46,9 +46,10 @@ const styles = StyleSheet.create({
   code: {
     ...Typography.bodyMedium,
     color: Colors.textPrimary,
+    fontSize: 18,
   },
   chevron: {
-    fontSize: 10,
+    fontSize: 14,
     color: Colors.textPrimary,
     marginLeft: 2,
   },
