@@ -1,97 +1,240 @@
-This is a new [**React Native**](https://reactnative.dev) project, bootstrapped using [`@react-native-community/cli`](https://github.com/react-native-community/cli).
+# StapuBox OTP Authentication
 
-# Getting Started
+A production-ready OTP authentication flow built with React Native CLI and TypeScript.
 
-> **Note**: Make sure you have completed the [Set Up Your Environment](https://reactnative.dev/docs/set-up-your-environment) guide before proceeding.
+![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey)
+![React Native](https://img.shields.io/badge/React%20Native-0.86-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
 
-## Step 1: Start Metro
+---
 
-First, you will need to run **Metro**, the JavaScript build tool for React Native.
+## Features
 
-To start the Metro dev server, run the following command from the root of your React Native project:
+- 📱 Mobile number entry with country code picker (+91)
+- 🔢 4-digit OTP input with auto-focus, backspace navigation & paste support
+- 📩 SMS Auto-Read via `react-native-sms-retriever` (Android only)
+- ⏱️ 60-second resend countdown timer with reset
+- ✅ Success screen with spring animation
+- 🛡️ Zod + React Hook Form validation
+- 🌐 Offline detection via `@react-native-community/netinfo`
+- 🎨 Pixel-perfect dark theme (Figma: `#2D2E2F` + `#2398FE`)
+- ⚡ Shake animation on invalid OTP
+- ♿ Full accessibility support (roles, labels, states)
 
-```sh
-# Using npm
+---
+
+## Tech Stack
+
+| Category | Library |
+|---|---|
+| Framework | React Native CLI 0.86 |
+| Language | TypeScript 5.8 |
+| Navigation | React Navigation v7 |
+| State | Zustand |
+| API | Axios |
+| Validation | React Hook Form + Zod |
+| SMS Auto-Read | react-native-sms-retriever |
+| Offline | @react-native-community/netinfo |
+
+---
+
+## Project Structure
+
+```
+src/
+├── api/              # Axios instance + raw API calls
+├── services/         # Business logic + error mapping
+├── store/            # Zustand global state
+├── hooks/            # Custom hooks (useSendOtp, useOtpTimer, etc.)
+├── screens/          # LoginScreen, VerifyOtpScreen, SuccessScreen
+├── components/       # Reusable UI (AppButton, OTPInput, etc.)
+├── navigation/       # AuthNavigator + typed routes
+├── constants/        # Colors, typography, spacing, strings
+├── utils/            # Validators, SMS parser
+└── types/            # TypeScript type definitions
+```
+
+---
+
+## Setup Guide
+
+### Prerequisites
+
+- Node.js >= 22.11.0
+- React Native CLI environment ([official setup](https://reactnative.dev/docs/set-up-your-environment))
+- Android Studio with SDK (for Android)
+- Xcode (for iOS)
+
+### 1. Clone & Install
+
+```bash
+git clone <repository-url>
+cd StapuBox
+npm install
+```
+
+### 2. Configure Environment
+
+```bash
+cp .env.example .env
+```
+
+Edit `.env`:
+
+```env
+BASE_URL=https://stapubox.com/trial
+API_TOKEN=your_api_token_here
+```
+
+### 3. Android Setup
+
+```bash
+# Start Metro bundler
 npm start
 
-# OR using Yarn
-yarn start
-```
-
-## Step 2: Build and run your app
-
-With Metro running, open a new terminal window/pane from the root of your React Native project, and use one of the following commands to build and run your Android or iOS app:
-
-### Android
-
-```sh
-# Using npm
+# Run on Android (in a new terminal)
 npm run android
-
-# OR using Yarn
-yarn android
 ```
 
-### iOS
+### 4. iOS Setup
 
-For iOS, remember to install CocoaPods dependencies (this only needs to be run on first clone or after updating native deps).
-
-The first time you create a new project, run the Ruby bundler to install CocoaPods itself:
-
-```sh
-bundle install
-```
-
-Then, and every time you update your native dependencies, run:
-
-```sh
-bundle exec pod install
-```
-
-For more information, please visit [CocoaPods Getting Started guide](https://guides.cocoapods.org/using/getting-started.html).
-
-```sh
-# Using npm
+```bash
+cd ios && pod install && cd ..
 npm run ios
-
-# OR using Yarn
-yarn ios
 ```
 
-If everything is set up correctly, you should see your new app running in the Android Emulator, iOS Simulator, or your connected device.
+---
 
-This is one way to run your app — you can also build it directly from Android Studio or Xcode.
+## Environment Variables
 
-## Step 3: Modify your app
+| Variable | Description | Required |
+|---|---|---|
+| `BASE_URL` | API base URL (e.g. `https://stapubox.com/trial`) | ✅ |
+| `API_TOKEN` | Bearer token for API authorization | ✅ |
 
-Now that you have successfully run the app, let's make changes!
+> **Security**: `.env` is gitignored. Never commit your API token.
 
-Open `App.tsx` in your text editor of choice and make some changes. When you save, your app will automatically update and reflect these changes — this is powered by [Fast Refresh](https://reactnative.dev/docs/fast-refresh).
+---
 
-When you want to forcefully reload, for example to reset the state of your app, you can perform a full reload:
+## API Endpoints
 
-- **Android**: Press the <kbd>R</kbd> key twice or select **"Reload"** from the **Dev Menu**, accessed via <kbd>Ctrl</kbd> + <kbd>M</kbd> (Windows/Linux) or <kbd>Cmd ⌘</kbd> + <kbd>M</kbd> (macOS).
-- **iOS**: Press <kbd>R</kbd> in iOS Simulator.
+| Action | Method | Endpoint |
+|---|---|---|
+| Send OTP | POST | `{BASE_URL}/sendOtp` |
+| Verify OTP | POST | `{BASE_URL}/verifyOtp?mobile={mobile}&otp={otp}` |
+| Resend OTP | POST | `{BASE_URL}/resendOtp` |
 
-## Congratulations! :tada:
+All requests include `Authorization: Bearer {API_TOKEN}` header.
 
-You've successfully run and modified your React Native App. :partying_face:
+---
 
-### Now what?
+## Architecture Decisions
 
-- If you want to add this new React Native code to an existing application, check out the [Integration guide](https://reactnative.dev/docs/integration-with-existing-apps).
-- If you're curious to learn more about React Native, check out the [docs](https://reactnative.dev/docs/getting-started).
+### Feature-Based Folder Structure
+Each feature owns its screen, styles, and component files. Scales cleanly as the app grows.
 
-# Troubleshooting
+### Service Layer Pattern
+API calls go through `auth.service.ts` which maps errors to user-friendly messages. Screens never contain API logic.
 
-If you're having issues getting the above steps to work, see the [Troubleshooting](https://reactnative.dev/docs/troubleshooting) page.
+### Minimal Global State (Zustand)
+Only the mobile number is stored globally (needed across Login → VerifyOtp → Success). Loading and error states remain local to each screen.
 
-# Learn More
+### Separation of Concerns
+- `api/` — HTTP only
+- `services/` — Business logic + error mapping
+- `hooks/` — UI state management
+- `screens/` — Composition only
 
-To learn more about React Native, take a look at the following resources:
+### SMS Retriever Abstraction
+`useSmsRetriever` hook abstracts the Android SMS Retriever API. Gracefully degrades on iOS (no-op). Users can always enter OTP manually.
 
-- [React Native Website](https://reactnative.dev) - learn more about React Native.
-- [Getting Started](https://reactnative.dev/docs/environment-setup) - an **overview** of React Native and how setup your environment.
-- [Learn the Basics](https://reactnative.dev/docs/getting-started) - a **guided tour** of the React Native **basics**.
-- [Blog](https://reactnative.dev/blog) - read the latest official React Native **Blog** posts.
-- [`@facebook/react-native`](https://github.com/facebook/react-native) - the Open Source; GitHub **repository** for React Native.
+### React.memo + useCallback
+All reusable components are wrapped in `React.memo`. Handlers use `useCallback` to prevent unnecessary re-renders.
+
+---
+
+## Running Tests
+
+```bash
+npm test
+
+# With coverage
+npm test -- --coverage
+```
+
+### Test Coverage
+
+| File | Tests |
+|---|---|
+| `validators.ts` | Mobile validation, OTP validation, numeric filter, Zod schema |
+| `smsParser.ts` | OTP extraction from various SMS formats |
+| `useOtpTimer.ts` | Countdown, finish callback, reset |
+
+---
+
+## Generating Release APK
+
+```bash
+cd android
+./gradlew assembleRelease
+```
+
+APK will be at:
+```
+android/app/build/outputs/apk/release/app-release.apk
+```
+
+> For a signed release, configure a keystore in `android/app/build.gradle`.
+
+---
+
+## SMS Auto-Read Flow (Android)
+
+```
+User taps Send OTP
+        ↓
+OTP Screen opens + SMS Retriever starts
+        ↓
+Server sends OTP via SMS
+        ↓
+react-native-sms-retriever receives message
+        ↓
+extractOtpFromSms() parses 4-digit code
+        ↓
+OTP boxes auto-filled + auto-submitted
+```
+
+> The SMS must contain the app's hash (generated from package name + signing key). This is handled automatically by the SMS Retriever API.
+
+---
+
+## Known Issues
+
+1. **SMS Retriever hash**: The SMS must include the app's 11-character hash string (appended by server). If the server doesn't include this hash, auto-read won't work — the user falls back to manual entry cleanly.
+
+2. **react-native-sms-retriever on RN 0.86**: Tested via dynamic import. If the native module fails to link, the hook falls back silently.
+
+3. **iOS**: SMS auto-read is Android-only. iOS users enter OTP manually — fully supported.
+
+4. **API response shape**: The service layer handles both `{ success, data }` and raw response shapes. If the API changes shape, update `auth.service.ts` only.
+
+---
+
+## Demo Flow
+
+1. Launch app → Login screen
+2. Enter 10-digit mobile number
+3. Tap "Send OTP" → loading state → navigate to OTP screen
+4. OTP auto-filled via SMS (Android) or enter manually
+5. 4th digit entered → auto-submit → loading
+6. Wrong OTP → red boxes + shake animation + error message
+7. "Resend OTP" disabled for 60s, then enabled
+8. Correct OTP → Success screen with animation
+9. "Change Mobile Number" → navigate back to Login
+
+---
+
+## License
+
+MIT
