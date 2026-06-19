@@ -1,6 +1,36 @@
 # StapuBox OTP Authentication
 
+A production-ready OTP authentication flow built with React Native CLI and TypeScript.
 
+![Platform](https://img.shields.io/badge/platform-Android%20%7C%20iOS-lightgrey)
+![React Native](https://img.shields.io/badge/React%20Native-0.86-blue)
+![TypeScript](https://img.shields.io/badge/TypeScript-5.8-blue)
+![License](https://img.shields.io/badge/license-MIT-green)
+
+---
+
+## 🚀 Quick Links
+
+- **[📺 Watch Demo Video](https://drive.google.com/file/d/15ImHWOdL03VckOqHv30EVzNTjDZE5Db3/view?usp=drivesdk)**
+- **[📦 Download Android APK](https://drive.google.com/file/d/1qCPtJEwrh1Okb0KcPc8BdNXnEKujvFlI/view?usp=sharing)**
+
+---
+
+## Features
+
+- 📱 Mobile number entry with country code picker (+91)
+- 🔢 4-digit OTP input with auto-focus, backspace navigation & paste support
+- 📩 **SMS Auto-Read** via native SMS User Consent API (Android) - No App Hash required!
+- ⌨️ Smooth keyboard handling & edge-to-edge layout via `react-native-keyboard-controller`
+- ⏱️ 60-second resend countdown timer with reset
+- ✅ Success screen with spring animation
+- 🛡️ Zod + React Hook Form validation
+- 🌐 Offline detection banner via `@react-native-community/netinfo`
+- 🎨 Pixel-perfect dark theme (Figma: `#2D2E2F` + `#2398FE`)
+- ⚡ Shake animation on invalid OTP
+- ♿ Full accessibility support (roles, labels, states)
+
+---
 ## Tech Stack
 
 | Category | Library |
