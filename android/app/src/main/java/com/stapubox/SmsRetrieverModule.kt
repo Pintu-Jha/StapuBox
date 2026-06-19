@@ -1,5 +1,6 @@
 package com.stapubox
 
+import android.app.Activity
 import android.content.BroadcastReceiver
 import android.content.Context
 import android.content.Intent
@@ -15,16 +16,23 @@ import java.nio.charset.StandardCharsets
 import java.security.MessageDigest
 
 class SmsRetrieverModule(private val reactContext: ReactApplicationContext) :
-    ReactContextBaseJavaModule(reactContext) {
+    ReactContextBaseJavaModule(reactContext), ActivityEventListener {
 
     private var smsBroadcastReceiver: BroadcastReceiver? = null
+    private val SMS_CONSENT_REQUEST = 2
+
+    init {
+        reactContext.addActivityEventListener(this)
+    }
 
     override fun getName(): String = "SmsRetrieverModule"
 
     @ReactMethod
     fun startListening(promise: Promise) {
         val client = SmsRetriever.getClient(reactContext)
-        val task = client.startSmsRetriever()
+        // null means we listen for an OTP from any sender.
+        // User Consent API does not require the app hash.
+        val task = client.startSmsUserConsent(null)
 
         task.addOnSuccessListener {
             registerReceiver()
@@ -41,6 +49,8 @@ class SmsRetrieverModule(private val reactContext: ReactApplicationContext) :
     }
 
     private fun registerReceiver() {
+        if (smsBroadcastReceiver != null) return
+
         smsBroadcastReceiver = object : BroadcastReceiver() {
             override fun onReceive(context: Context, intent: Intent) {
                 if (SmsRetriever.SMS_RETRIEVED_ACTION == intent.action) {
@@ -48,8 +58,20 @@ class SmsRetrieverModule(private val reactContext: ReactApplicationContext) :
                     val status = extras.get(SmsRetriever.EXTRA_STATUS) as? com.google.android.gms.common.api.Status ?: return
 
                     if (status.statusCode == CommonStatusCodes.SUCCESS) {
-                        val message = extras.getString(SmsRetriever.EXTRA_SMS_MESSAGE) ?: return
-                        sendEvent(message)
+                        val consentIntent = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+                            extras.getParcelable(SmsRetriever.EXTRA_CONSENT_INTENT, Intent::class.java)
+                        } else {
+                            @Suppress("DEPRECATION")
+                            extras.getParcelable<Intent>(SmsRetriever.EXTRA_CONSENT_INTENT)
+                        }
+                        
+                        if (consentIntent != null) {
+                            try {
+                                reactContext.currentActivity?.startActivityForResult(consentIntent, SMS_CONSENT_REQUEST)
+                            } catch (e: Exception) {
+                                // Fallback or ignore
+                            }
+                        }
                     }
                 }
             }
@@ -72,6 +94,19 @@ class SmsRetrieverModule(private val reactContext: ReactApplicationContext) :
         }
     }
 
+    override fun onActivityResult(activity: Activity, requestCode: Int, resultCode: Int, data: Intent?) {
+        if (requestCode == SMS_CONSENT_REQUEST) {
+            if (resultCode == Activity.RESULT_OK && data != null) {
+                val message = data.getStringExtra(SmsRetriever.EXTRA_SMS_MESSAGE)
+                if (message != null) {
+                    sendEvent(message)
+                }
+            }
+        }
+    }
+
+    override fun onNewIntent(intent: Intent) {}
+
     private fun sendEvent(message: String) {
         reactContext
             .getJSModule(DeviceEventManagerModule.RCTDeviceEventEmitter::class.java)
@@ -80,6 +115,7 @@ class SmsRetrieverModule(private val reactContext: ReactApplicationContext) :
 
     override fun invalidate() {
         unregisterReceiver()
+        reactContext.removeActivityEventListener(this)
         super.invalidate()
     }
 

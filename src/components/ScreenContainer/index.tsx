@@ -6,7 +6,7 @@ import {
   StatusBar,
 } from 'react-native';
 import { SafeAreaView, Edge } from 'react-native-safe-area-context';
-import { KeyboardAwareScrollView } from 'react-native-keyboard-aware-scroll-view';
+import { KeyboardAwareScrollView } from 'react-native-keyboard-controller';
 import { Colors } from '../../constants/colors';
 import { Spacing } from '../../constants/spacing';
 
@@ -37,8 +37,7 @@ const ScreenContainer: React.FC<ScreenContainerProps> = ({
       ]}
       keyboardShouldPersistTaps="handled"
       showsVerticalScrollIndicator={false}
-      enableOnAndroid
-      extraScrollHeight={20}
+      bottomOffset={120}
     >
       {children}
     </KeyboardAwareScrollView>
@@ -58,8 +57,8 @@ const ScreenContainer: React.FC<ScreenContainerProps> = ({
     <SafeAreaView style={[styles.container, style]} edges={edges}>
       <StatusBar
         barStyle="light-content"
-        backgroundColor={Colors.background}
-        translucent={false}
+        backgroundColor="transparent"
+        translucent={true}
       />
       {content}
     </SafeAreaView>

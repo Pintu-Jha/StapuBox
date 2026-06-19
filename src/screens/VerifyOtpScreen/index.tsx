@@ -1,12 +1,6 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import { View, Text, TouchableOpacity } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withSpring,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated';
+import Animated, { FadeInUp } from 'react-native-reanimated';
 import { useNavigation, useRoute, RouteProp, useFocusEffect } from '@react-navigation/native';
 
 import AppHeader from '../../components/AppHeader';
@@ -46,50 +40,6 @@ const VerifyOtpScreen: React.FC = () => {
     }, [clearError, startTimer]),
   );
 
-  const headerOpacity = useSharedValue(0);
-  const headerTranslateY = useSharedValue(-12);
-  const otpOpacity = useSharedValue(0);
-  const otpTranslateY = useSharedValue(24);
-
-  useEffect(() => {
-    headerOpacity.value = withTiming(1, { duration: 350 });
-    headerTranslateY.value = withSpring(0, { damping: 14, stiffness: 130 });
-    otpOpacity.value = withDelay(180, withTiming(1, { duration: 380 }));
-    otpTranslateY.value = withDelay(180, withSpring(0, { damping: 14, stiffness: 120 }));
-  }, []);
-
-  const headerStyle = useAnimatedStyle(() => ({
-    opacity: headerOpacity.value,
-    transform: [{ translateY: headerTranslateY.value }],
-  }));
-
-  const otpStyle = useAnimatedStyle(() => ({
-    opacity: otpOpacity.value,
-    transform: [{ translateY: otpTranslateY.value }],
-  }));
-
-  const handleOtpFromSms = useCallback(
-    (receivedOtp: string) => {
-      setOtp(receivedOtp);
-      setOtpError(false);
-      clearError();
-    },
-    [clearError],
-  );
-
-  useSmsRetriever({ onOtpReceived: handleOtpFromSms });
-
-  const handleOtpChange = useCallback(
-    (value: string) => {
-      setOtp(value);
-      if (otpError) {
-        setOtpError(false);
-        clearError();
-      }
-    },
-    [otpError, clearError],
-  );
-
   const handleVerify = useCallback(
     async (enteredOtp: string) => {
       if (enteredOtp.length !== 4) {
@@ -106,6 +56,33 @@ const VerifyOtpScreen: React.FC = () => {
     },
     [verifyOtp, mobile],
   );
+
+  const handleOtpFromSms = useCallback(
+    (receivedOtp: string) => {
+      setOtp(receivedOtp);
+      setOtpError(false);
+      clearError();
+      if (receivedOtp.length === 4) {
+        handleVerify(receivedOtp);
+      }
+    },
+    [clearError, handleVerify],
+  );
+
+  useSmsRetriever({ onOtpReceived: handleOtpFromSms });
+
+  const handleOtpChange = useCallback(
+    (value: string) => {
+      setOtp(value);
+      if (otpError) {
+        setOtpError(false);
+        clearError();
+      }
+    },
+    [otpError, clearError],
+  );
+
+
 
   const handleResend = useCallback(async () => {
     if (!timerFinished || resending) {
@@ -131,11 +108,11 @@ const VerifyOtpScreen: React.FC = () => {
       <AppLoader fullScreen visible={verifying} message={Strings.verifying} />
 
       <View style={styles.container}>
-        <Animated.View style={headerStyle}>
+        <Animated.View entering={FadeInUp.duration(350).springify()}>
           <AppHeader title={Strings.otpTitle} onBackPress={handleChangeNumber} />
         </Animated.View>
 
-        <Animated.View style={[styles.body, otpStyle]}>
+        <Animated.View entering={FadeInUp.delay(180).duration(380).springify()} style={styles.body}>
           <Text style={styles.heading}>{Strings.otpSubtitle}</Text>
 
           <View style={styles.otpWrapper}>

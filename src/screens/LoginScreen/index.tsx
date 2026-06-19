@@ -2,14 +2,7 @@ import React, { useCallback, useEffect } from 'react';
 import {
   View,
   Text,
-  ScrollView,
 } from 'react-native';
-import Animated, {
-  useSharedValue,
-  useAnimatedStyle,
-  withTiming,
-  withDelay,
-} from 'react-native-reanimated';
 import { useForm, Controller } from 'react-hook-form';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
@@ -36,40 +29,7 @@ const LoginScreen: React.FC = () => {
   const { setMobile } = useAuthStore();
   const { sendOtp, loading, error: apiError } = useSendOtp();
 
-  const logoOpacity = useSharedValue(0);
-  const logoTranslateY = useSharedValue(-16);
-  const headingOpacity = useSharedValue(0);
-  const headingTranslateY = useSharedValue(20);
-  const formOpacity = useSharedValue(0);
-  const formTranslateY = useSharedValue(28);
-  const footerOpacity = useSharedValue(0);
 
-  useEffect(() => {
-    headingOpacity.value = withTiming(1, { duration: 380 });
-    headingTranslateY.value = withTiming(0, { duration: 380 });
-
-    formOpacity.value = withDelay(280, withTiming(1, { duration: 380 }));
-    formTranslateY.value = withDelay(
-      280,
-      withTiming(0, { duration: 380 }),
-    );
-
-    footerOpacity.value = withDelay(450, withTiming(1, { duration: 400 }));
-  }, []);
-
-  const headingStyle = useAnimatedStyle(() => ({
-    opacity: headingOpacity.value,
-    transform: [{ translateY: headingTranslateY.value }],
-  }));
-
-  const formStyle = useAnimatedStyle(() => ({
-    opacity: formOpacity.value,
-    transform: [{ translateY: formTranslateY.value }],
-  }));
-
-  const footerStyle = useAnimatedStyle(() => ({
-    opacity: footerOpacity.value,
-  }));
 
   const {
     control,
@@ -93,18 +53,16 @@ const LoginScreen: React.FC = () => {
   );
 
   return (
-    <ScreenContainer scrollable padded={false}>
-      <ScrollView
-        style={styles.container}
-        contentContainerStyle={styles.content}
-        keyboardShouldPersistTaps="handled"
-        showsVerticalScrollIndicator={false}
-      >
-        <Animated.View style={headingStyle}>
+    <ScreenContainer 
+      scrollable 
+      padded={false} 
+      contentContainerStyle={styles.content}
+    >
+        <View>
           <Text style={styles.heading}>{Strings.loginTitle}</Text>
-        </Animated.View>
+        </View>
 
-        <Animated.View style={formStyle}>
+        <View>
           <View style={styles.formRow}>
             <CountryCodePicker code={Strings.countryCode} testID="country-code-picker" />
 
@@ -144,16 +102,15 @@ const LoginScreen: React.FC = () => {
               testID="send-otp-button"
             />
           </View>
-        </Animated.View>
+        </View>
 
 
-        <Animated.View style={[styles.footer, footerStyle]}>
+        <View style={styles.footer}>
           <Text style={styles.footerText}>
             {Strings.createAccountPrefix}
             <Text style={styles.footerLink}>{Strings.createAccountLink}</Text>
           </Text>
-        </Animated.View>
-      </ScrollView>
+        </View>
     </ScreenContainer>
   );
 };
