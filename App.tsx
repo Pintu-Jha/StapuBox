@@ -4,6 +4,7 @@ import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { GestureHandlerRootView } from 'react-native-gesture-handler';
 import { StyleSheet } from 'react-native';
 import { KeyboardProvider } from 'react-native-keyboard-controller';
+import NetworkBanner from './src/components/NetworkBanner';
 import AppNavigator from './src/navigation/AppNavigator';
 
 function App(): React.JSX.Element {
@@ -14,6 +15,7 @@ function App(): React.JSX.Element {
           <NavigationContainer>
             <AppNavigator />
           </NavigationContainer>
+          <NetworkBanner />
         </SafeAreaProvider>
       </KeyboardProvider>
     </GestureHandlerRootView>
